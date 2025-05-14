@@ -49,7 +49,7 @@ jobs:
         echo "    const lastLogin = user.last_login;" >> block_inactive_users.js
         echo "    if (lastLogin) {" >> block_inactive_users.js
         echo "      const lastLoginDate = dayjs(lastLogin);" >> block_inactive_users.js
-        echo "      if (dayjs().diff(lastLoginDate, 'day') > 5) {" >> block_inactive_users.js
+        echo "      if (dayjs().diff(lastLoginDate, 'day') > 10) {" >> block_inactive_users.js
         echo "        const userId = user.user_id;" >> block_inactive_users.js
         echo "        let retryCount = 0;" >> block_inactive_users.js
         echo "        const maxRetries = 5;" >> block_inactive_users.js
