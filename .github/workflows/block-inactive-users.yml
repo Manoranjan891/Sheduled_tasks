@@ -23,7 +23,7 @@ jobs:
       run: npm install axios dayjs
 
     - name: Run script
-      run: node block_inactive_users.js
+      run: node block_nactive_users.js
       env:
         AUTH0_DOMAIN: ${{ secrets.AUTH0_DOMAIN }}
         AUTH0_CLIENT_ID: ${{ secrets.AUTH0_CLIENT_ID }}
