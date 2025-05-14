@@ -28,7 +28,7 @@ async function blockInactiveUsers() {
     const lastLogin = user.last_login;
     if (lastLogin) {
       const lastLoginDate = dayjs(lastLogin);
-      if (dayjs().diff(lastLoginDate, 'day') > 365) {
+      if (dayjs().diff(lastLoginDate, 'day') > 4) {
         const userId = user.user_id;
         await axios.patch(`https://${AUTH0_DOMAIN}/api/v2/users/${userId}`, { blocked: true }, { headers });
       }
