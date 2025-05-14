@@ -1,0 +1,13 @@
+{
+  "name": "scheduled-tasks",
+  "version": "1.0.0",
+  "description": "A script to block inactive users using Auth0",
+  "main": "block_inactive_users.js",
+  "scripts": {
+    "start": "node block_inactive_users.js"
+  },
+  "dependencies": {
+    "axios": "^0.21.1",
+    "dayjs": "^1.10.4"
+  }
+}
