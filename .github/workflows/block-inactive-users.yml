@@ -22,13 +22,15 @@ jobs:
     - name: Install dependencies
       run: npm install axios dayjs
 
-    - name: Create script file
+    - name: Create and run block inactive users script
       run: |
         echo "const axios = require('axios');" > block_inactive_users.js
         echo "const dayjs = require('dayjs');" >> block_inactive_users.js
+        echo "" >> block_inactive_users.js
         echo "const AUTH0_DOMAIN = process.env.AUTH0_DOMAIN;" >> block_inactive_users.js
         echo "const AUTH0_CLIENT_ID = process.env.AUTH0_CLIENT_ID;" >> block_inactive_users.js
         echo "const AUTH0_CLIENT_SECRET = process.env.AUTH0_CLIENT_SECRET;" >> block_inactive_users.js
+        echo "" >> block_inactive_users.js
         echo "async function getAuth0Token() {" >> block_inactive_users.js
         echo "  const response = await axios.post(\`https://\${AUTH0_DOMAIN}/oauth/token\`, {" >> block_inactive_users.js
         echo "    client_id: AUTH0_CLIENT_ID," >> block_inactive_users.js
@@ -40,27 +42,43 @@ jobs:
         echo "  });" >> block_inactive_users.js
         echo "  return response.data.access_token;" >> block_inactive_users.js
         echo "}" >> block_inactive_users.js
+        echo "" >> block_inactive_users.js
         echo "async function blockInactiveUsers() {" >> block_inactive_users.js
         echo "  const token = await getAuth0Token();" >> block_inactive_users.js
         echo "  const headers = { Authorization: \`Bearer \${token}\` };" >> block_inactive_users.js
         echo "  const response = await axios.get(\`https://\${AUTH0_DOMAIN}/api/v2/users\`, { headers });" >> block_inactive_users.js
+        echo "" >> block_inactive_users.js
         echo "  const users = response.data;" >> block_inactive_users.js
-        echo "  users.forEach(async (user) => {" >> block_inactive_users.js
+        echo "  for (const user of users) {" >> block_inactive_users.js
         echo "    const lastLogin = user.last_login;" >> block_inactive_users.js
         echo "    if (lastLogin) {" >> block_inactive_users.js
         echo "      const lastLoginDate = dayjs(lastLogin);" >> block_inactive_users.js
-        echo "      if (dayjs().diff(lastLoginDate, 'day') > 5) {" >> block_inactive_users.js
+        echo "      const daysInactive = dayjs().diff(lastLoginDate, 'day');" >> block_inactive_users.js
+        echo "      if (daysInactive > 4) {" >> block_inactive_users.js
         echo "        const userId = user.user_id;" >> block_inactive_users.js
-        echo "        await axios.patch(\`https://\${AUTH0_DOMAIN}/api/v2/users/\${userId}\`, { blocked: true }, { headers });" >> block_inactive_users.js
+        echo "        try {" >> block_inactive_users.js
+        echo "          await axios.patch(\`https://\${AUTH0_DOMAIN}/api/v2/users/\${userId}\`, { blocked: true }, { headers });" >> block_inactive_users.js
+        echo "          console.log(\`User \${userId} has been blocked due to inactivity.\`);" >> block_inactive_users.js
+        echo "        } catch (error) {" >> block_inactive_users.js
+        echo "          if (error.response && error.response.status === 429) {" >> block_inactive_users.js
+        echo "            console.log('Rate limit exceeded, retrying after delay...');" >> block_inactive_users.js
+        echo "            await new Promise(resolve => setTimeout(resolve, 10000)); // Wait for 10 seconds before retrying" >> block_inactive_users.js
+        echo "            continue; // Retry the current user" >> block_inactive_users.js
+        echo "          } else {" >> block_inactive_users.js
+        echo "            console.error(\`Failed to block user \${userId}:\`, error);" >> block_inactive_users.js
+        echo "          }" >> block_inactive_users.js
+        echo "        }" >> block_inactive_users.js
         echo "      }" >> block_inactive_users.js
         echo "    }" >> block_inactive_users.js
-        echo "  });" >> block_inactive_users.js
+        echo "    await new Promise(resolve => setTimeout(resolve, 1000)); // Wait for 1 second between requests" >> block_inactive_users.js
+        echo "  }" >> block_inactive_users.js
         echo "}" >> block_inactive_users.js
+        echo "" >> block_inactive_users.js
         echo "blockInactiveUsers().catch(console.error);" >> block_inactive_users.js
-
-    - name: Run script
-      run: node block_inactive_users.js
       env:
         AUTH0_DOMAIN: ${{ secrets.AUTH0_DOMAIN }}
         AUTH0_CLIENT_ID: ${{ secrets.AUTH0_CLIENT_ID }}
         AUTH0_CLIENT_SECRET: ${{ secrets.AUTH0_CLIENT_SECRET }}
+
+    - name: Execute script
+      run: node block_inactive_users.js
